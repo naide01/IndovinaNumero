@@ -6,6 +6,8 @@ package it.polito.tdp.IndovinaNumero;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.indovinaNumero2.model.Gioco;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -14,14 +16,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ProgressBar;
 
 public class FXMLController {
-	
-	
-	private int TMax;
-	private int NMax;
-	private int NTentativiFatti;
-	private int numeroSegreto;
-	
 
+	private Gioco model;
+	
     @FXML // ResourceBundle that was given to the FXMLLoader
     private ResourceBundle resources;
 
@@ -57,32 +54,17 @@ public class FXMLController {
 
     @FXML
     void doNuovaPartita(ActionEvent event) {
-    	//inizializzare variabili del gioco
-    	this.NTentativiFatti = 0;
-    	this.numeroSegreto = (int)(Math.random()*this.NMax) + 1;
-    	try {
-    		this.TMax = Integer.parseInt(this.txtTMax.getText());
-    	}catch(NumberFormatException e) {
-    		this.txtCom.setText("TMax deve eseere un numero!");
-    	}
+    	//reset gioco
+    	model.iniziaGioco();
     	
-    	try {
-    		this.NMax = Integer.parseInt(this.txtNMax.getText());
-    	}catch(NumberFormatException e) {
-    		this.txtCom.setText("NMax deve eseere un numero!");
-    	}
-    	
-    	//scrivere informazioni utente
-    	this.txtTentativi.setText( Integer.toString(this.TMax-this.NTentativiFatti) );
-    	this.txtNMax.setText(Integer.toString(this.NMax) );
-    	this.txtTMax.setText(Integer.toString(this.TMax));
-//    	this.txtRisultato.setText(Integer.toString(numeroSegreto));
-    	
+    	//aggiornamento interfaccia grafica
+    	this.txtTentativi.setText( Integer.toString(this.model.getTMax()-this.model.getNTentativiFatti()) );
+    	this.txtNMax.setText(Integer.toString(this.model.getNMax()) );
+    	this.txtTMax.setText(Integer.toString(this.model.getTMax()));
     	this.btnPRova.setDisable(false);
     	this.txtRisultato.clear();
     	this.txtProva.clear();
     	this.txtCom.clear();
-    	
     	this.barTentativi.setProgress(0);
 
     }
@@ -97,38 +79,36 @@ public class FXMLController {
     		this.txtCom.setText("inserire un numero!");
     		return;
     	}
+    	//fare controlli sul numero tra 1 e NMAX
     	
-    	
-    	//fare controlli sul numero
-    	
-    	//incrementare numero tentativi fatti
-    	this.NTentativiFatti++;
-    	
-    	this.txtTentativi.setText( Integer.toString(this.TMax-this.NTentativiFatti) );
-    	this.barTentativi.setProgress((double) this.NTentativiFatti / this.TMax);
-    	
-    	//giocare
-    	if (guess == this.numeroSegreto) {
-    		this.txtRisultato.appendText("Hai vinto. Il numero segreto era " + this.numeroSegreto + "\n");
+    	//chiamare il modello per effuttare il tentativo
+    		Gioco.OutcomeGioco risultato = this.model.faiTentativo(guess);
+    		
+    	//aggiornamneto interfaccia grafica
+    	this.txtTentativi.setText( Integer.toString(this.model.getTMax()-this.model.getNTentativiFatti()) );
+    	this.barTentativi.setProgress((double) this.model.getNTentativiFatti() / this.model.getTMax());
+
+    	if (risultato == Gioco.OutcomeGioco.Vinto) {
+    		this.txtRisultato.appendText("Hai vinto. Il numero segreto era: " + this.model.getNumeroSegreto() + "\n");
     		this.btnPRova.setDisable(true);
     		return;
     	}
-    	
-    	if (this.NTentativiFatti == this.TMax) {
-    		this.txtRisultato.appendText("Hai perso. Il numero segreto era " + this.numeroSegreto + "\n");
+    	if (risultato == Gioco.OutcomeGioco.Perso) {
+    		this.txtRisultato.appendText("Hai perso. Il numero segreto era: " + this.model.getNumeroSegreto()+ "\n");
     		this.btnPRova.setDisable(true);
     		return;
     	}
-    	
-    	if(guess>this.numeroSegreto) {
-    		this.txtRisultato.appendText("Numero troppo alto\n");
-    	}else  {
-    		this.txtRisultato.appendText("Numero tropo basso\n");
+    	if (risultato == Gioco.OutcomeGioco.TroppoAlto) {
+    		this.txtRisultato.appendText("Il numero è troppo alto!" +"\n");
+    	} else {
+    		this.txtRisultato.appendText("Il numero è troppo basso!" +"\n");
     	}
-    	
-    	
-    	
+    
     }
+
+	public void setModel(Gioco model) {
+		this.model = model;
+	}
     
     
 
